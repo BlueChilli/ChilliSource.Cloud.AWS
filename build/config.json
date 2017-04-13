@@ -1,0 +1,14 @@
+{
+	"productName" : "ChilliSource Cloud AWS",
+	"projectName" : "ChilliSource.Cloud.AWS",
+	"githubOwner": "BlueChilli",
+	"githubRepository": "ChilliSource.Cloud.AWS",
+	"packageWhiteList": ["ChilliSource.Cloud.AWS"],
+	"solutionFile" : "../src/ChilliSource.Cloud.AWS.sln",
+	"tags": [ "ChilliSource", "ChilliSource Cloud AWS"],
+	"authors" : ["Blue Chilli Technology Pty Ltd"],
+	"copyright" : "Copyright Blue Chilli Technology Pty Ltd 2017",
+	"iconUrl": "https://avatars0.githubusercontent.com/u/5924219?v=3&s=200",
+	"testProjectPath": "../src/ChilliSource.Cloud.AWS.Tests/ChilliSource.Cloud.AWS.Tests.csproj",
+	"nuspecRootPath" : "../"
+}
