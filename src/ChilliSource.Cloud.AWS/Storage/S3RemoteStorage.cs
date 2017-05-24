@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ChilliSource.Cloud.AWS
@@ -15,27 +16,33 @@ namespace ChilliSource.Cloud.AWS
     public class S3RemoteStorage : IRemoteStorage
     {
         S3Element _s3Config;
-        private string _host;
+        Func<S3Element, IAmazonS3> _clientFactory;
 
-        public S3RemoteStorage(S3Element s3Config)
+        public S3RemoteStorage(S3Element s3Config, Func<S3Element, IAmazonS3> clientFactory = null)
         {
             _s3Config = s3Config ?? ProjectConfigurationSection.GetConfig().FileStorage?.S3;
             if (_s3Config == null)
             {
                 throw new ApplicationException("S3 storage element not found in the configuration file");
             }
-
-            _host = _s3Config.Host ?? "https://s3.amazonaws.com";
-            if (!_host.StartsWith("http"))
-                _host = $"https://{_host}";
+            _clientFactory = clientFactory ?? GetClientFactory;
         }
 
-        private AmazonS3Client GetClient()
+        private static AmazonS3Client GetClientFactory(S3Element s3Config)
         {
-            return new AmazonS3Client(_s3Config.AccessKeyId, _s3Config.SecretAccessKey, new AmazonS3Config()
+            var host = s3Config.Host ?? "https://s3.amazonaws.com";
+            if (!host.StartsWith("http"))
+                host = $"https://{host}";
+
+            return new AmazonS3Client(s3Config.AccessKeyId, s3Config.SecretAccessKey, new AmazonS3Config()
             {
-                ServiceURL = _host
+                ServiceURL = host
             });
+        }
+
+        private IAmazonS3 GetClient()
+        {
+            return _clientFactory(_s3Config);
         }
 
         private static string EncodeKey(string key)
@@ -61,7 +68,7 @@ namespace ChilliSource.Cloud.AWS
             {
                 try
                 {
-                    await s3Client.DeleteObjectAsync(_s3Config.Bucket, EncodeKey(fileToDelete))
+                    await s3Client.DeleteObjectAsync(_s3Config.Bucket, EncodeKey(fileToDelete), default(CancellationToken))
                           .IgnoreContext();
                 }
                 catch (AmazonS3Exception ex)
