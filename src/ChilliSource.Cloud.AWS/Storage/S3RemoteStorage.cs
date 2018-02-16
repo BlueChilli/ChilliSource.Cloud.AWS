@@ -1,6 +1,7 @@
 ﻿using Amazon.S3;
 using Amazon.S3.Model;
 using ChilliSource.Cloud.Core;
+using ChilliSource.Core.Extensions;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -13,16 +14,16 @@ namespace ChilliSource.Cloud.AWS
 {
     public class S3RemoteStorage : IRemoteStorage
     {
-        S3Element _s3Config;
+        S3StorageConfiguration _s3Config;
         private string _host;
 
-        public S3RemoteStorage(S3Element s3Config)
+        public S3RemoteStorage(S3StorageConfiguration s3Config)
         {
-            _s3Config = s3Config ?? ProjectConfigurationSection.GetConfig().FileStorage?.S3;
-            if (_s3Config == null)
+            if (s3Config == null)
             {
-                throw new ApplicationException("S3 storage element not found in the configuration file");
+                throw new ArgumentNullException("s3Config is required.");
             }
+            _s3Config = s3Config;
 
             _host = _s3Config.Host ?? "https://s3.amazonaws.com";
             if (!_host.StartsWith("http"))
@@ -125,6 +126,11 @@ namespace ChilliSource.Cloud.AWS
                     throw;
                 }
             }
+        }
+
+        public string GetPartialFilePath(string fileName)
+        {
+            return $"{_s3Config.Bucket}/{fileName}";
         }
     }
 }

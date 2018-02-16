@@ -28,9 +28,13 @@
 
   <ItemGroup>
     <Compile Include="..\CommonAssemblyInfo.cs" Link="Properties\CommonAssemblyInfo.cs" />
-    <PackageReference Include="ChilliSource.Cloud.Core" Version="1.0.0" />
-    <PackageReference Include="AWSSDK.Core" Version="3.3.10.1" />
-    <PackageReference Include="AWSSDK.S3" Version="3.3.5.10" />
+    <PackageReference Include="AWSSDK.S3" Version="3.3.17" />
+    <PackageReference Include="ChilliSource.Cloud.Core" Version="1.0.1-alpha0011" />    
+    <PackageReference Include="Newtonsoft.Json" Version="10.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\ChilliSource.Cloud.Core\src\ChilliSource.Cloud.Core\ChilliSource.Cloud.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>
