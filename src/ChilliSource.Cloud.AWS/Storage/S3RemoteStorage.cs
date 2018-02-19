@@ -8,29 +8,39 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace ChilliSource.Cloud.AWS
 {
     public class S3RemoteStorage : IRemoteStorage
     {
-        S3Element _s3Config;
-        Func<S3Element, IAmazonS3> _clientFactory;
+        S3StorageConfiguration _s3Config;
+        Func<S3StorageConfiguration, IAmazonS3> _clientFactory;
 
-        public S3RemoteStorage(S3Element s3Config, Func<S3Element, IAmazonS3> clientFactory = null)
+        public S3RemoteStorage(S3StorageConfiguration s3Config)
+            : this(s3Config, DefaultClientFactory)
         {
-            _s3Config = s3Config ?? ProjectConfigurationSection.GetConfig().FileStorage?.S3;
-            if (_s3Config == null)
-            {
-                throw new ApplicationException("S3 storage element not found in the configuration file");
-            }
-            _clientFactory = clientFactory ?? GetClientFactory;
         }
 
-        private static AmazonS3Client GetClientFactory(S3Element s3Config)
+        public S3RemoteStorage(S3StorageConfiguration s3Config, Func<S3StorageConfiguration, IAmazonS3> clientFactory)
         {
-            var host = s3Config.Host ?? "https://s3.amazonaws.com";
+            if (s3Config == null)
+            {
+                throw new ArgumentNullException("s3Config is required.");
+            }
+
+            if (clientFactory == null)
+            {
+                throw new ArgumentNullException("client Factory is required");
+            }
+
+            _s3Config = s3Config;
+            _clientFactory = clientFactory;
+        }
+
+        private static IAmazonS3 DefaultClientFactory(S3StorageConfiguration s3Config)
+        {
+            var host = String.IsNullOrEmpty(s3Config.Host) ? "https://s3.amazonaws.com" : s3Config.Host;
             if (!host.StartsWith("http"))
                 host = $"https://{host}";
 
@@ -68,7 +78,7 @@ namespace ChilliSource.Cloud.AWS
             {
                 try
                 {
-                    await s3Client.DeleteObjectAsync(_s3Config.Bucket, EncodeKey(fileToDelete), default(CancellationToken))
+                    await s3Client.DeleteObjectAsync(_s3Config.Bucket, EncodeKey(fileToDelete))
                           .IgnoreContext();
                 }
                 catch (AmazonS3Exception ex)
@@ -133,6 +143,11 @@ namespace ChilliSource.Cloud.AWS
                     throw;
                 }
             }
+        }
+
+        public string GetPartialFilePath(string fileName)
+        {
+            return $"{_s3Config.Bucket}/{fileName}";
         }
     }
 }
