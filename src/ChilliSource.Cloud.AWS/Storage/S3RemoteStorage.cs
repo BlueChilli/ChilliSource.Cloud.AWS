@@ -91,20 +91,34 @@ namespace ChilliSource.Cloud.AWS
 
         public async Task<FileStorageResponse> GetContentAsync(string fileName)
         {
-            using (var s3Client = GetClient())
-            using (var response = await s3Client.GetObjectAsync(_s3Config.Bucket, EncodeKey(fileName))
-                                        .IgnoreContext())
+            IAmazonS3 s3Client = null;
+            GetObjectResponse response = null;
+
+            try
             {
+                s3Client = GetClient();
+                response = await s3Client.GetObjectAsync(_s3Config.Bucket, EncodeKey(fileName))
+                                            .IgnoreContext();
+
                 var contentLength = response.Headers.ContentLength;
                 var contentType = response.Headers.ContentType;
 
-                var memStream = new MemoryStream((int)contentLength);
-                await response.ResponseStream.CopyToAsync(memStream, Math.Min(80 * 1024, (int)contentLength))
-                       .IgnoreContext();
+                Action disposingAction = () =>
+                {
+                    response?.Dispose();
+                    s3Client?.Dispose();
+                };
 
-                memStream.Position = 0;
+                var readonlyStream = ReadOnlyStreamWrapper.Create(response.ResponseStream, contentLength, disposingAction);                
 
-                return FileStorageResponse.Create(fileName, contentLength, contentType, memStream);
+                return FileStorageResponse.Create(fileName, contentLength, contentType, readonlyStream);
+            }
+            catch
+            {
+                response?.Dispose();
+                s3Client?.Dispose();
+
+                throw;
             }
         }
 

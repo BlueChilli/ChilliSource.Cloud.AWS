@@ -29,7 +29,7 @@
   <ItemGroup>
     <Compile Include="..\CommonAssemblyInfo.cs" Link="Properties\CommonAssemblyInfo.cs" />
     <PackageReference Include="AWSSDK.S3" Version="3.3.17" />
-    <PackageReference Include="ChilliSource.Cloud.Core" Version="1.0.1-alpha0012" />    
+    <PackageReference Include="ChilliSource.Cloud.Core" Version="1.0.1-alpha0020" />    
     <PackageReference Include="Newtonsoft.Json" Version="10.0.2" />
   </ItemGroup>
 
