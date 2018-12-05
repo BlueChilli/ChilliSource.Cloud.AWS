@@ -103,13 +103,13 @@ namespace ChilliSource.Cloud.AWS
                 var contentLength = response.Headers.ContentLength;
                 var contentType = response.Headers.ContentType;
 
-                Action disposingAction = () =>
+                Action<Stream> disposingAction = (s) =>
                 {
-                    response?.Dispose();
+                    response?.Dispose(); //also disposes ResponseStream
                     s3Client?.Dispose();
                 };
 
-                var readonlyStream = ReadOnlyStreamWrapper.Create(response.ResponseStream, contentLength, disposingAction);                
+                var readonlyStream = ReadOnlyStreamWrapper.Create(response.ResponseStream, disposingAction, contentLength);                
 
                 return FileStorageResponse.Create(fileName, contentLength, contentType, readonlyStream);
             }
