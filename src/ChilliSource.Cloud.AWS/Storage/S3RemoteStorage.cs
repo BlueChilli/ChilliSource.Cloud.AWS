@@ -132,7 +132,7 @@ namespace ChilliSource.Cloud.AWS
             }
         }
 
-        public async Task<bool> ExistsAsync(string fileName)
+        internal async Task<GetObjectMetadataResponse> GetMetadata(string fileName)
         {
             using (var s3Client = GetClient())
             {
@@ -144,24 +144,32 @@ namespace ChilliSource.Cloud.AWS
                         Key = EncodeKey(fileName)
                     };
 
-                    var response = await s3Client.GetObjectMetadataAsync(request)
+                    return await s3Client.GetObjectMetadataAsync(request)
                                          .IgnoreContext();
-                    return true;
                 }
                 catch (AmazonS3Exception ex)
                 {
                     if (!string.Equals(ex.ErrorCode, "NoSuchBucket") && (ex.StatusCode == HttpStatusCode.NotFound))
                     {
-                        return false;
+                        return null;
                     }
                     throw;
                 }
             }
         }
 
+        public async Task<bool> ExistsAsync(string fileName)
+        {
+            return (await GetMetadata(fileName)) != null;
+        }
+
+#if NET_4X
+        [Obsolete]
         public string GetPartialFilePath(string fileName)
         {
             return $"{_s3Config.Bucket}/{fileName}";
         }
+#endif
+
     }
 }
