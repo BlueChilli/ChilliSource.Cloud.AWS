@@ -18,10 +18,10 @@ namespace ChilliSource.Cloud.AWS.ImageSharp
 {
     public class AWSImageProvider : IImageProvider
     {
-        AwsImageProviderOptions _options;
+        AWSImageProviderOptions _options;
         PathString _pathPrefix;
 
-        public AWSImageProvider(IOptions<AwsImageProviderOptions> optionsAcessor)
+        public AWSImageProvider(IOptions<AWSImageProviderOptions> optionsAcessor)
         {
             _options = optionsAcessor.Value;
 
