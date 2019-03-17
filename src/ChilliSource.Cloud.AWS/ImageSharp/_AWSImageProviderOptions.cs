@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace ChilliSource.Cloud.AWS.ImageSharp
 {
-    public class AwsImageProviderOptions
+    public class AWSImageProviderOptions
     {
         public S3StorageConfiguration StorageConfiguration { get; set; }
         public string UrlPrefix { get; set; }
