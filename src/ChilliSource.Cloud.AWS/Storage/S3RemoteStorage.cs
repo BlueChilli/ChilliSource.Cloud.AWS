@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ChilliSource.Cloud.AWS
@@ -72,13 +73,19 @@ namespace ChilliSource.Cloud.AWS
             };
         }
 
+#if NET_4X
         public async Task DeleteAsync(string fileToDelete)
         {
+            CancellationToken cancellationToken = CancellationToken.None;
+#else
+        public async Task DeleteAsync(string fileToDelete, CancellationToken cancellationToken)
+        { 
+#endif
             using (var s3Client = GetClient())
             {
                 try
                 {
-                    await s3Client.DeleteObjectAsync(_s3Config.Bucket, EncodeKey(fileToDelete))
+                    await s3Client.DeleteObjectAsync(_s3Config.Bucket, EncodeKey(fileToDelete), cancellationToken)
                           .IgnoreContext();
                 }
                 catch (AmazonS3Exception ex)
@@ -89,15 +96,21 @@ namespace ChilliSource.Cloud.AWS
             }
         }
 
+#if NET_4X
         public async Task<FileStorageResponse> GetContentAsync(string fileName)
         {
+            CancellationToken cancellationToken = CancellationToken.None;
+#else
+        public async Task<FileStorageResponse> GetContentAsync(string fileName, CancellationToken cancellationToken)
+        { 
+#endif
             IAmazonS3 s3Client = null;
             GetObjectResponse response = null;
 
             try
             {
                 s3Client = GetClient();
-                response = await s3Client.GetObjectAsync(_s3Config.Bucket, EncodeKey(fileName))
+                response = await s3Client.GetObjectAsync(_s3Config.Bucket, EncodeKey(fileName), cancellationToken)
                                             .IgnoreContext();
 
                 var contentLength = response.Headers.ContentLength;
@@ -109,7 +122,7 @@ namespace ChilliSource.Cloud.AWS
                     s3Client?.Dispose();
                 };
 
-                var readonlyStream = ReadOnlyStreamWrapper.Create(response.ResponseStream, disposingAction, contentLength);                
+                var readonlyStream = ReadOnlyStreamWrapper.Create(response.ResponseStream, disposingAction, contentLength);
 
                 return FileStorageResponse.Create(fileName, contentLength, contentType, readonlyStream);
             }
@@ -122,17 +135,23 @@ namespace ChilliSource.Cloud.AWS
             }
         }
 
+#if NET_4X
         public async Task SaveAsync(Stream stream, string fileName, string contentType)
         {
+            CancellationToken cancellationToken = CancellationToken.None;
+#else
+        public async Task SaveAsync(Stream stream, string fileName, string contentType, CancellationToken cancellationToken)
+        { 
+#endif
             using (var s3Client = GetClient())
             {
                 var putRequest = CreatePutRequest(stream, fileName, contentType);
-                var response = await s3Client.PutObjectAsync(putRequest)
+                var response = await s3Client.PutObjectAsync(putRequest, cancellationToken)
                                      .IgnoreContext();
             }
         }
 
-        internal async Task<GetObjectMetadataResponse> GetMetadata(string fileName)
+        internal async Task<GetObjectMetadataResponse> GetMetadata(string fileName, CancellationToken cancellationToken)
         {
             using (var s3Client = GetClient())
             {
@@ -144,7 +163,7 @@ namespace ChilliSource.Cloud.AWS
                         Key = EncodeKey(fileName)
                     };
 
-                    return await s3Client.GetObjectMetadataAsync(request)
+                    return await s3Client.GetObjectMetadataAsync(request, cancellationToken)
                                          .IgnoreContext();
                 }
                 catch (AmazonS3Exception ex)
@@ -158,9 +177,15 @@ namespace ChilliSource.Cloud.AWS
             }
         }
 
+#if NET_4X
         public async Task<bool> ExistsAsync(string fileName)
         {
-            return (await GetMetadata(fileName)) != null;
+            CancellationToken cancellationToken = CancellationToken.None;
+#else
+        public async Task<bool> ExistsAsync(string fileName, CancellationToken cancellationToken)
+        { 
+#endif               
+            return (await GetMetadata(fileName, cancellationToken).IgnoreContext()) != null;
         }
 
 #if NET_4X

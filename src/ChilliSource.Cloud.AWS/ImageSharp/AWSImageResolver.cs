@@ -1,5 +1,6 @@
 ﻿#if !NET_4X
 using Amazon.S3.Model;
+using ChilliSource.Core.Extensions;
 using SixLabors.ImageSharp.Web;
 using SixLabors.ImageSharp.Web.Resolvers;
 using System;
@@ -7,6 +8,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net.Http.Headers;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ChilliSource.Cloud.AWS.ImageSharp
@@ -40,7 +42,8 @@ namespace ChilliSource.Cloud.AWS.ImageSharp
 
         public async Task<Stream> OpenReadAsync()
         {
-            var response = await _storage.GetContentAsync(_fileName);
+            var response = await _storage.GetContentAsync(_fileName, CancellationToken.None)
+                                .IgnoreContext();
             if (response == null)
                 throw new ApplicationException("AWSImageResolver.OpenReadAsync failed to find file.");
 

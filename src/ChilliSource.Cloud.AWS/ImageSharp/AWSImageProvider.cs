@@ -1,5 +1,6 @@
 ﻿#if !NET_4X
 using Amazon.S3.Model;
+using ChilliSource.Core.Extensions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.Extensions.DependencyInjection;
@@ -73,7 +74,8 @@ namespace ChilliSource.Cloud.AWS.ImageSharp
             if (String.IsNullOrEmpty(fileName))
                 return null;
 
-            var metadata = await remoteStorage.GetMetadata(fileName);
+            var metadata = await remoteStorage.GetMetadata(fileName, context.RequestAborted)
+                                 .IgnoreContext();
             if (metadata != null)
             {
                 return new AWSImageResolver(remoteStorage, fileName, metadata);
