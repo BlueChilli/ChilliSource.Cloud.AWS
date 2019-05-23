@@ -79,7 +79,7 @@ namespace ChilliSource.Cloud.AWS
             CancellationToken cancellationToken = CancellationToken.None;
 #else
         public async Task DeleteAsync(string fileToDelete, CancellationToken cancellationToken)
-        { 
+        {
 #endif
             using (var s3Client = GetClient())
             {
@@ -102,7 +102,7 @@ namespace ChilliSource.Cloud.AWS
             CancellationToken cancellationToken = CancellationToken.None;
 #else
         public async Task<FileStorageResponse> GetContentAsync(string fileName, CancellationToken cancellationToken)
-        { 
+        {
 #endif
             IAmazonS3 s3Client = null;
             GetObjectResponse response = null;
@@ -138,20 +138,51 @@ namespace ChilliSource.Cloud.AWS
 #if NET_4X
         public async Task SaveAsync(Stream stream, string fileName, string contentType)
         {
-            CancellationToken cancellationToken = CancellationToken.None;
-#else
-        public async Task SaveAsync(Stream stream, string fileName, string contentType, CancellationToken cancellationToken)
-        { 
-#endif
             using (var s3Client = GetClient())
             {
                 var putRequest = CreatePutRequest(stream, fileName, contentType);
+                var response = await s3Client.PutObjectAsync(putRequest, CancellationToken.None)
+                                     .IgnoreContext();
+            }
+        }
+#else
+        public async Task SaveAsync(Stream stream, string fileName, string contentType, CancellationToken cancellationToken)
+        {
+            await SaveAsync(stream, new FileStorageMetadataInfo()
+            {
+                FileName = fileName,
+                ContentType = contentType
+            }, cancellationToken);
+        }
+
+        public async Task SaveAsync(Stream stream, FileStorageMetadataInfo metadata, CancellationToken cancellationToken)
+        {
+            using (var s3Client = GetClient())
+            {
+                var putRequest = CreatePutRequest(stream, metadata.FileName, metadata.ContentType);
+                if (!String.IsNullOrEmpty(metadata.CacheControl))
+                {
+                    putRequest.Headers.CacheControl = metadata.CacheControl;
+                }
+
+                if (!String.IsNullOrEmpty(metadata.ContentDisposition))
+                {
+                    putRequest.Headers.ContentDisposition = metadata.ContentDisposition;
+                }
+
+                if (!String.IsNullOrEmpty(metadata.ContentEncoding))
+                {
+                    putRequest.Headers.ContentEncoding = metadata.ContentEncoding;
+                }
+
                 var response = await s3Client.PutObjectAsync(putRequest, cancellationToken)
                                      .IgnoreContext();
             }
         }
+#endif
 
-        internal async Task<GetObjectMetadataResponse> GetMetadata(string fileName, CancellationToken cancellationToken)
+
+        private async Task<GetObjectMetadataResponse> GetMetadataInternalAsync(string fileName, CancellationToken cancellationToken)
         {
             using (var s3Client = GetClient())
             {
@@ -183,9 +214,9 @@ namespace ChilliSource.Cloud.AWS
             CancellationToken cancellationToken = CancellationToken.None;
 #else
         public async Task<bool> ExistsAsync(string fileName, CancellationToken cancellationToken)
-        { 
-#endif               
-            return (await GetMetadata(fileName, cancellationToken).IgnoreContext()) != null;
+        {
+#endif
+            return (await GetMetadataInternalAsync(fileName, cancellationToken).IgnoreContext()) != null;
         }
 
 #if NET_4X
@@ -193,6 +224,25 @@ namespace ChilliSource.Cloud.AWS
         public string GetPartialFilePath(string fileName)
         {
             return $"{_s3Config.Bucket}/{fileName}";
+        }
+#else
+        public async Task<IFileStorageMetadataResponse> GetMetadataAsync(string fileName, CancellationToken cancellationToken)
+        {
+            var s3Metadata = await GetMetadataInternalAsync(fileName, cancellationToken);
+            var headers = s3Metadata.Headers;
+
+            var metadata = new FileStorageMetadataResponse()
+            {
+                FileName = fileName,
+                CacheControl = headers.CacheControl,
+                ContentDisposition = headers.ContentDisposition,
+                ContentEncoding = headers.ContentEncoding,
+                ContentLength = headers.ContentLength,
+                ContentType = headers.ContentType,
+                LastModifiedUtc = s3Metadata.LastModified.ToUniversalTime()
+            };
+
+            return metadata;
         }
 #endif
 
