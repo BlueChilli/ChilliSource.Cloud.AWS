@@ -100,10 +100,6 @@ namespace ChilliSource.Cloud.AWS
         public async Task<FileStorageResponse> GetContentAsync(string fileName)
         {
             CancellationToken cancellationToken = CancellationToken.None;
-#else
-        public async Task<FileStorageResponse> GetContentAsync(string fileName, CancellationToken cancellationToken)
-        {
-#endif
             IAmazonS3 s3Client = null;
             GetObjectResponse response = null;
 
@@ -134,6 +130,39 @@ namespace ChilliSource.Cloud.AWS
                 throw;
             }
         }
+#else
+        public async Task<FileStorageResponse> GetContentAsync(string fileName, CancellationToken cancellationToken)
+        {
+            IAmazonS3 s3Client = null;
+            GetObjectResponse response = null;
+
+            try
+            {
+                s3Client = GetClient();
+                response = await s3Client.GetObjectAsync(_s3Config.Bucket, EncodeKey(fileName), cancellationToken)
+                                            .IgnoreContext();
+
+                var metadata = MapMetadata(fileName, response.LastModified, response.Headers);
+
+                Action<Stream> disposingAction = (s) =>
+                {
+                    response?.Dispose(); //also disposes ResponseStream
+                    s3Client?.Dispose();
+                };
+
+                var readonlyStream = ReadOnlyStreamWrapper.Create(response.ResponseStream, disposingAction, metadata.ContentLength);
+
+                return FileStorageResponse.Create(metadata, readonlyStream);
+            }
+            catch
+            {
+                response?.Dispose();
+                s3Client?.Dispose();
+
+                throw;
+            }
+        }
+#endif
 
 #if NET_4X
         public async Task SaveAsync(Stream stream, string fileName, string contentType)
@@ -226,11 +255,8 @@ namespace ChilliSource.Cloud.AWS
             return $"{_s3Config.Bucket}/{fileName}";
         }
 #else
-        public async Task<IFileStorageMetadataResponse> GetMetadataAsync(string fileName, CancellationToken cancellationToken)
+        private FileStorageMetadataResponse MapMetadata(string fileName, DateTime lastModified, HeadersCollection headers)
         {
-            var s3Metadata = await GetMetadataInternalAsync(fileName, cancellationToken);
-            var headers = s3Metadata.Headers;
-
             var metadata = new FileStorageMetadataResponse()
             {
                 FileName = fileName,
@@ -239,10 +265,18 @@ namespace ChilliSource.Cloud.AWS
                 ContentEncoding = headers.ContentEncoding,
                 ContentLength = headers.ContentLength,
                 ContentType = headers.ContentType,
-                LastModifiedUtc = s3Metadata.LastModified.ToUniversalTime()
+                LastModifiedUtc = lastModified.ToUniversalTime()
             };
 
             return metadata;
+        }
+
+        public async Task<IFileStorageMetadataResponse> GetMetadataAsync(string fileName, CancellationToken cancellationToken)
+        {
+            var s3Metadata = await GetMetadataInternalAsync(fileName, cancellationToken);
+            var headers = s3Metadata.Headers;
+
+            return MapMetadata(fileName, s3Metadata.LastModified, s3Metadata.Headers);
         }
 #endif
 
