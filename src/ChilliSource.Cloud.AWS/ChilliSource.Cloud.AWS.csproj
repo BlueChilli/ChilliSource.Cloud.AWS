@@ -16,15 +16,8 @@
     <RepositoryUrl>https://github.com/BlueChilli/ChilliSource.Cloud.AWS</RepositoryUrl>
     <PackageLicenseUrl>https://github.com/BlueChilli/ChilliSource.Cloud.AWS/blob/master/LICENSE</PackageLicenseUrl>
     <Authors>BlueChilli Technology</Authors>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net461|AnyCPU'">
-    <DocumentationFile>bin\Release\net461\ChilliSource.Cloud.AWS.xml</DocumentationFile>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net462|AnyCPU'">
-    <DocumentationFile>bin\Release\net462\ChilliSource.Cloud.AWS.xml</DocumentationFile>
-  </PropertyGroup>
+    <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
+  </PropertyGroup>  
 
   <PropertyGroup Condition="'$(TargetFramework)'=='net461'">
     <DefineConstants>$(DefineConstants);NET_4X</DefineConstants>
