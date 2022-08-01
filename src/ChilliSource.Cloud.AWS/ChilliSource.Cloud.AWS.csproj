@@ -1,9 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net461;net462;</TargetFrameworks>
-    <DebugType>full</DebugType>
-    <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
+    <TargetFrameworks>net6.0</TargetFrameworks>
+	<DebugType>pdbonly</DebugType>
+	<GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
     <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
     <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
     <GenerateAssemblyInformationalVersionAttribute>false</GenerateAssemblyInformationalVersionAttribute>
@@ -19,28 +19,10 @@
     <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
   </PropertyGroup>  
 
-  <PropertyGroup Condition="'$(TargetFramework)'=='net461'">
-    <DefineConstants>$(DefineConstants);NET_4X</DefineConstants>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(TargetFramework)'=='net462'">
-    <DefineConstants>$(DefineConstants);NET_4X</DefineConstants>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.0|AnyCPU'">
-    <DebugSymbols>true</DebugSymbols>
-  </PropertyGroup>
-
   <ItemGroup>
     <Compile Include="..\CommonAssemblyInfo.cs" Link="Properties\CommonAssemblyInfo.cs" />
     <PackageReference Include="AWSSDK.S3" Version="3.3.31.18" />
-    <PackageReference Condition="'$(TargetFramework)'!='netstandard2.0'" Include="ChilliSource.Cloud.Core" Version="1.0.1" />
-    <PackageReference Condition="'$(TargetFramework)'=='netstandard2.0'" Include="ChilliSource.Cloud.Core" Version="2.0.0-alpha0073" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Reference Condition="'$(TargetFramework)'!='netstandard2.0'" Include="Microsoft.CSharp" />
-    <Reference Condition="'$(TargetFramework)'!='netstandard2.0'" Include="System.Configuration" />
+    <PackageReference Include="ChilliSource.Cloud.Core" Version="2.0.0-alpha0135" />
   </ItemGroup>
 
 </Project>

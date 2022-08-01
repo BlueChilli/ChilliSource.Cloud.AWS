@@ -213,7 +213,9 @@ Action<string> build = (solution) =>
 			    .WithProperty("PackageReleaseNotes",  "\"" +  string.Format("{0}/releases", githubUrl) + "\"")
 			  	.SetVerbosity(Verbosity.Minimal)
 				.SetNodeReuse(false);
-
+				
+				settings.ToolVersion = MSBuildToolVersion.VS2019;
+				
 				var msBuildLogger = GetMSBuildLoggerArguments();
 			
 				if(!string.IsNullOrEmpty(msBuildLogger)) 

@@ -73,14 +73,9 @@ namespace ChilliSource.Cloud.AWS
             };
         }
 
-#if NET_4X
-        public async Task DeleteAsync(string fileToDelete)
-        {
-            CancellationToken cancellationToken = CancellationToken.None;
-#else
         public async Task DeleteAsync(string fileToDelete, CancellationToken cancellationToken)
         {
-#endif
+            if (string.IsNullOrEmpty(fileToDelete)) return;
             using (var s3Client = GetClient())
             {
                 try
@@ -96,41 +91,6 @@ namespace ChilliSource.Cloud.AWS
             }
         }
 
-#if NET_4X
-        public async Task<FileStorageResponse> GetContentAsync(string fileName)
-        {
-            CancellationToken cancellationToken = CancellationToken.None;
-            IAmazonS3 s3Client = null;
-            GetObjectResponse response = null;
-
-            try
-            {
-                s3Client = GetClient();
-                response = await s3Client.GetObjectAsync(_s3Config.Bucket, EncodeKey(fileName), cancellationToken)
-                                            .IgnoreContext();
-
-                var contentLength = response.Headers.ContentLength;
-                var contentType = response.Headers.ContentType;
-
-                Action<Stream> disposingAction = (s) =>
-                {
-                    response?.Dispose(); //also disposes ResponseStream
-                    s3Client?.Dispose();
-                };
-
-                var readonlyStream = ReadOnlyStreamWrapper.Create(response.ResponseStream, disposingAction, contentLength);
-
-                return FileStorageResponse.Create(fileName, contentLength, contentType, readonlyStream);
-            }
-            catch
-            {
-                response?.Dispose();
-                s3Client?.Dispose();
-
-                throw;
-            }
-        }
-#else
         public async Task<FileStorageResponse> GetContentAsync(string fileName, CancellationToken cancellationToken)
         {
             IAmazonS3 s3Client = null;
@@ -162,19 +122,7 @@ namespace ChilliSource.Cloud.AWS
                 throw;
             }
         }
-#endif
 
-#if NET_4X
-        public async Task SaveAsync(Stream stream, string fileName, string contentType)
-        {
-            using (var s3Client = GetClient())
-            {
-                var putRequest = CreatePutRequest(stream, fileName, contentType);
-                var response = await s3Client.PutObjectAsync(putRequest, CancellationToken.None)
-                                     .IgnoreContext();
-            }
-        }
-#else
         public async Task SaveAsync(Stream stream, string fileName, string contentType, CancellationToken cancellationToken)
         {
             await SaveAsync(stream, new FileStorageMetadataInfo()
@@ -208,8 +156,6 @@ namespace ChilliSource.Cloud.AWS
                                      .IgnoreContext();
             }
         }
-#endif
-
 
         private async Task<GetObjectMetadataResponse> GetMetadataInternalAsync(string fileName, CancellationToken cancellationToken)
         {
@@ -237,24 +183,12 @@ namespace ChilliSource.Cloud.AWS
             }
         }
 
-#if NET_4X
-        public async Task<bool> ExistsAsync(string fileName)
-        {
-            CancellationToken cancellationToken = CancellationToken.None;
-#else
         public async Task<bool> ExistsAsync(string fileName, CancellationToken cancellationToken)
         {
-#endif
+            if (string.IsNullOrEmpty(fileName)) return false;
             return (await GetMetadataInternalAsync(fileName, cancellationToken).IgnoreContext()) != null;
         }
 
-#if NET_4X
-        [Obsolete]
-        public string GetPartialFilePath(string fileName)
-        {
-            return $"{_s3Config.Bucket}/{fileName}";
-        }
-#else
         private FileStorageMetadataResponse MapMetadata(string fileName, DateTime lastModified, HeadersCollection headers)
         {
             var metadata = new FileStorageMetadataResponse()
@@ -278,7 +212,6 @@ namespace ChilliSource.Cloud.AWS
 
             return MapMetadata(fileName, s3Metadata.LastModified, s3Metadata.Headers);
         }
-#endif
 
     }
 }
