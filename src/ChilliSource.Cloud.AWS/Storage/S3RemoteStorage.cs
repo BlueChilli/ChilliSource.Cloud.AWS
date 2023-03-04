@@ -2,6 +2,7 @@
 using Amazon.S3.Model;
 using ChilliSource.Cloud.Core;
 using ChilliSource.Core.Extensions;
+using NodaTime;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -213,5 +214,18 @@ namespace ChilliSource.Cloud.AWS
             return MapMetadata(fileName, s3Metadata.LastModified, s3Metadata.Headers);
         }
 
+        public string GetPreSignedUrl(string fileName, TimeSpan expiresIn)
+        {
+            using (var s3Client = GetClient())
+            {
+                var request = new GetPreSignedUrlRequest
+                {
+                    BucketName = _s3Config.Bucket,
+                    Key = EncodeKey(fileName),
+                    Expires = DateTime.UtcNow.Add(expiresIn)
+                };
+                return s3Client.GetPreSignedURL(request);
+            }
+        }
     }
 }

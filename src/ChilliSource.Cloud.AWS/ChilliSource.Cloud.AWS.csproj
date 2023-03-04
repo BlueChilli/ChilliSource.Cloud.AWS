@@ -22,7 +22,7 @@
   <ItemGroup>
     <Compile Include="..\CommonAssemblyInfo.cs" Link="Properties\CommonAssemblyInfo.cs" />
     <PackageReference Include="AWSSDK.S3" Version="3.3.31.18" />
-    <PackageReference Include="ChilliSource.Cloud.Core" Version="2.0.0-alpha0135" />
+    <PackageReference Include="ChilliSource.Cloud.Core" Version="2.0.0-alpha0142" />
   </ItemGroup>
 
 </Project>
