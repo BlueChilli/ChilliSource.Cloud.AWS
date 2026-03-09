@@ -103,7 +103,7 @@ namespace ChilliSource.Cloud.AWS
                 response = await s3Client.GetObjectAsync(_s3Config.Bucket, EncodeKey(fileName), cancellationToken)
                                             .IgnoreContext();
 
-                var metadata = MapMetadata(fileName, response.LastModified, response.Headers);
+                var metadata = MapMetadata(fileName, response.LastModified ?? DateTime.MinValue, response.Headers);
 
                 Action<Stream> disposingAction = (s) =>
                 {
@@ -211,7 +211,7 @@ namespace ChilliSource.Cloud.AWS
             var s3Metadata = await GetMetadataInternalAsync(fileName, cancellationToken);
             var headers = s3Metadata.Headers;
 
-            return MapMetadata(fileName, s3Metadata.LastModified, s3Metadata.Headers);
+            return MapMetadata(fileName, s3Metadata.LastModified ?? DateTime.MinValue, s3Metadata.Headers);
         }
 
         public string GetPreSignedUrl(string fileName, TimeSpan expiresIn)
