@@ -1,4 +1,5 @@
-﻿using Amazon.S3;
+﻿using Amazon;
+using Amazon.S3;
 using Amazon.S3.Model;
 using ChilliSource.Cloud.Core;
 using ChilliSource.Core.Extensions;
@@ -48,7 +49,8 @@ namespace ChilliSource.Cloud.AWS
 
             return new AmazonS3Client(s3Config.AccessKeyId, s3Config.SecretAccessKey, new AmazonS3Config()
             {
-                ServiceURL = host
+                ServiceURL = host,
+                RegionEndpoint = RegionEndpoint.GetBySystemName(s3Config.Region)
             });
         }
 
